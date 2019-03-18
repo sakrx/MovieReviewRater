@@ -1,0 +1,213 @@
+/**
+ *  @author Sanskriti Timseena 
+ *  
+ *  <EXTRA CREDIT>
+ *  
+ *  @description:  [provide a brief description of your program]
+ */
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Scanner;
+
+public class MovieReview {
+	public static void main(String args[]) {
+		if (args.length != 1) {
+			System.err.println("Must pass name of movie reviews file");
+			System.exit(0);
+		}
+
+		// variables for keeping track of the input file
+		String line;
+		int score;
+		List<String> fileLines;
+
+		// the movie review entered by the user
+		String review = " ";
+		
+		Scanner keyboard = new Scanner(System.in);
+
+		// open input file
+		try {
+			// Read each line into a list
+			fileLines = Files.readAllLines(Paths.get(args[0]));
+		} catch(IOException e) {
+			System.err.println("File " + args[0] + " not found.");
+			return;
+		}
+		
+		/**
+		 * This logic reads through each input line and extracts each separate word.
+		 */
+
+		DictionaryInterface<String, WordEntry> d = new HashDictionaryLinear<String, WordEntry>();
+		
+		Iterator<String> itr = fileLines.iterator();
+
+		while (itr.hasNext()) {
+			// get the next line in the movie reviews
+			line = itr.next();
+			
+			// obtain the score
+			score = Integer.parseInt(line.substring(0, 1));
+			
+			// remove the score from the review
+			line = line.substring(2).trim();
+
+			// now remove all non alphanumeric characters
+			line = line.replaceAll("[^a-zA-Z]+", " ");
+
+			// splits the line into each word
+			String tokens[] = line.split(" ");
+			
+			/**
+			 * At this point, tokens[0] is the first word in the review,
+			 * tokens[1] is the second word, and so forth.
+			 */
+
+			/**
+			 * Apply the algorithm whereby you construct the dictionary that maps
+			 * each word to a WordEntry object. At this point, each WordEntry object
+			 * contains the total score and number of appearances of each word.
+			 */
+			
+			for(int i = 0; i < tokens.length; i++)
+			{
+				if (!(tokens[i].equalsIgnoreCase("the") || tokens[i].equalsIgnoreCase("a"))
+						&&  d.contains(tokens[i]))
+				{
+					WordEntry w = d.get(tokens[i]);
+					int o = w.getOccurrence();
+					w.setOccurrence(o+1);
+					
+					double s = w.getScore();
+					w.setScore(s + (double) score);
+				}
+				else
+				{
+					WordEntry word = new WordEntry(1 , score);
+					d.put(tokens[i], word);
+				}
+			}
+		}
+
+		System.out.println("Just read " + fileLines.size() + " reviews.");
+
+
+
+		// After movie reviews have been entered in the dictionary, prompt the user for a new movie review
+
+		while (review.length() > 0) {
+			System.out.println("Enter a review -- Press return to exit");
+			review = keyboard.nextLine();
+
+
+			// parse message
+			review = review.replaceAll("[^a-zA-Z]+", " ");
+
+			// split the tokens
+			String tokens[] = review.split(" ");
+
+			/**
+			 * Now apply the algorithm that gets the average score for each of the
+			 * keywords, and calculates an average score for the review.
+			 */
+			
+			double sum = 0;
+			
+			for (int i = 0 ; i < tokens.length ; i++)
+			{
+				if (d.contains(tokens[i]))
+				{
+					WordEntry w = d.get(tokens[i]);
+					int o = w.getOccurrence();
+					double s = w.getScore();
+					
+					
+					//check if any of the words is a positive keyword.
+					// 1. (for extra credit, please look at algorithmExplanation.docx) >> checking occurrence
+
+					if ((tokens[i].equalsIgnoreCase("great") ||
+							tokens[i].equalsIgnoreCase("refreshing") ||
+							tokens[i].equalsIgnoreCase("thrilling") ||
+							tokens[i].equalsIgnoreCase("fascinating") ||
+							tokens[i].equalsIgnoreCase("brilliant") ||
+							tokens[i].equalsIgnoreCase("smart") ||
+							tokens[i].equalsIgnoreCase("best") ||
+							tokens[i].equalsIgnoreCase("intelligent") ||
+							tokens[i].equalsIgnoreCase("gay")) && o > 5)
+					{
+						s = s*2.5;
+					}
+					
+					//check if any of the words is a negative keyword.
+					if ((tokens[i].equalsIgnoreCase("horrible") ||
+							tokens[i].equalsIgnoreCase("depressing") ||
+							tokens[i].equalsIgnoreCase("corny") ||
+							tokens[i].equalsIgnoreCase("mediocre") ||
+							tokens[i].equalsIgnoreCase("lazy") ||
+							tokens[i].equalsIgnoreCase("dreadful") ||
+							tokens[i].equalsIgnoreCase("artificial") ||
+							tokens[i].equalsIgnoreCase("silly") ||
+							tokens[i].equalsIgnoreCase("eww")) && o > 5)
+					{
+						s = s*0.25;
+					}
+				
+					// 3. (for extra credit, please look at algorithmExplanation.docx) >> capitalization
+					boolean boo = false;
+					for (int j = 0 ; j < tokens[i].length() ; j++)
+					{
+						char c = tokens[i].charAt(j);
+						
+						if (Character.isUpperCase(c))
+							boo = true;
+						else if (j > 1)
+						{
+							boo = false;
+							break;
+						}
+					}
+					
+					if (boo)
+						s = s * 1.8;
+					else 
+						s = s * 0.5;
+					
+					
+					double avg = s/o;
+					
+					sum += avg;
+				}
+			}
+			
+			// 2. (for extra credit, please look at algorithmExplanation.docx)
+			if (tokens.length < 2)
+				sum = sum + 1;
+			double finalScore = sum/tokens.length;
+		
+			/**
+			 * Now report the review based upon the idea that:
+			 * 
+			 * > 2 positive review
+			 * 
+			 * == 2 neutral review
+			 * 
+			 * < 2 negative review
+			 */
+			
+			System.out.println("The review has an average value of " + finalScore);
+			
+			if (finalScore < 2)
+				System.out.println("Negative sentiment");
+			else if (finalScore == 2)
+				System.out.println("Neutral sentiment");
+			else
+				System.out.println("Positive sentiment");
+
+		}
+	}
+}
