@@ -1,0 +1,34 @@
+//Sanskriti Timseena
+
+public class WordEntry 
+{
+	private String word;
+	private double score;
+	private int occurrences;
+	
+	public WordEntry(int occurrences, int score)
+	{
+		this.occurrences = occurrences;
+		this.score = score;
+	}
+	
+	public int getOccurrence()
+	{
+		return occurrences;
+	}
+	
+	public double getScore()
+	{
+		return score;
+	}
+	
+	public void setOccurrence(int o)
+	{
+		occurrences = o;
+	}
+	
+	public void setScore(double s)
+	{
+		score = s;
+	}
+}
